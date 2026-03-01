@@ -11,7 +11,7 @@ public static class BoardSetupEditor
     [MenuItem("Board Game/Create 7x7 Board in Scene")]
     public static void CreateBoardInScene()
     {
-        var canvas = Object.FindObjectOfType<Canvas>();
+        var canvas = Object.FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
             var canvasObj = new GameObject("Canvas");
@@ -22,7 +22,7 @@ public static class BoardSetupEditor
             scaler.referenceResolution = new Vector2(800, 600);
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            if (Object.FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
+            if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 var esObj = new GameObject("EventSystem");
                 esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
