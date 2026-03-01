@@ -8,6 +8,52 @@ using UnityEditor;
 /// </summary>
 public static class BoardSetupEditor
 {
+    private static System.Type GetBoardResolutionAdapterType()
+    {
+        foreach (var asm in System.AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var type = asm.GetType("BoardResolutionAdapter");
+            if (type != null) return type;
+        }
+        return null;
+    }
+
+    private static Component AddOrGetResolutionAdapter(GameObject go, RectTransform rect, GridLayoutGroup grid)
+    {
+        var type = GetBoardResolutionAdapterType();
+        if (type == null)
+        {
+            Debug.LogWarning("BoardResolutionAdapter 타입을 찾을 수 없습니다.");
+            return null;
+        }
+        var adapter = go.GetComponent(type) ?? go.AddComponent(type);
+        var so = new SerializedObject(adapter);
+        so.FindProperty("boardRect").objectReferenceValue = rect;
+        so.FindProperty("gridLayout").objectReferenceValue = grid;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return adapter;
+    }
+
+    [MenuItem("Board Game/Add Resolution Adapter to Selected")]
+    public static void AddResolutionAdapterToSelected()
+    {
+        var go = Selection.activeGameObject;
+        if (go == null)
+        {
+            Debug.LogWarning("보드 오브젝트를 선택한 뒤 실행하세요.");
+            return;
+        }
+        var rect = go.GetComponent<RectTransform>();
+        var grid = go.GetComponent<GridLayoutGroup>();
+        if (rect == null || grid == null)
+        {
+            Debug.LogWarning("RectTransform과 GridLayoutGroup이 있는 보드 오브젝트를 선택하세요.");
+            return;
+        }
+        if (AddOrGetResolutionAdapter(go, rect, grid) != null)
+            Debug.Log("BoardResolutionAdapter 추가됨.");
+    }
+
     [MenuItem("Board Game/Create 7x7 Board in Scene")]
     public static void CreateBoardInScene()
     {
@@ -17,9 +63,6 @@ public static class BoardSetupEditor
             var canvasObj = new GameObject("Canvas");
             canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasObj.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(800, 600);
             canvasObj.AddComponent<GraphicRaycaster>();
 
             if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -29,6 +72,13 @@ public static class BoardSetupEditor
                 esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             }
         }
+
+        var scaler = canvas.GetComponent<CanvasScaler>();
+        if (scaler == null) scaler = canvas.gameObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
+        scaler.referencePixelsPerUnit = 100;
 
         var boardObj = new GameObject("Board");
         boardObj.transform.SetParent(canvas.transform, false);
@@ -46,6 +96,8 @@ public static class BoardSetupEditor
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = 7;
         gridLayout.childAlignment = TextAnchor.MiddleCenter;
+
+        AddOrGetResolutionAdapter(boardObj, rect, gridLayout);
 
         for (int r = 0; r < 7; r++)
         {
