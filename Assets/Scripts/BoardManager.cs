@@ -103,6 +103,47 @@ public class BoardManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 말 놓기 규칙: 첫 턴은 아무데나, 이후엔 상대가 막 놓은 위치 주변 8칸만.
+    /// 주변 8칸이 전부 막혀있으면 상대 모든 말의 주변 8칸 중 하나에 놓을 수 있음.
+    /// </summary>
+    public bool IsValidPlacement(GridCell cell, bool isFirstTurn, GridCell lastPlacedCell, int currentPlayer)
+    {
+        if (isFirstTurn) return true;
+        if (lastPlacedCell == null) return false;
+
+        int opponent = currentPlayer == 1 ? 2 : 1;
+        var neighbors = lastPlacedCell.GetNeighbors();
+
+        bool anyNeighborFree = false;
+        bool cellIsInNeighbors = false;
+        foreach (var n in neighbors)
+        {
+            if (n == null) continue;
+            if (n == cell) cellIsInNeighbors = true;
+            if (!n.HasPiece) anyNeighborFree = true;
+        }
+
+        if (anyNeighborFree)
+            return cellIsInNeighbors;
+
+        for (int r = 0; r < boardSize; r++)
+        {
+            for (int c = 0; c < boardSize; c++)
+            {
+                var other = cells[r, c];
+                if (other.CurrentPlayer != opponent) continue;
+
+                foreach (var n in other.GetNeighbors())
+                {
+                    if (n != null && n == cell)
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
     /// 4목을 이룬 모든 그리드 셀 리스트 반환. 없으면 null.
     /// 가로, 세로, 대각선(\) , 대각선(/) 4방향 검사.
     /// </summary>
