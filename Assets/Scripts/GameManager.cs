@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
         if (boardManager == null)
             boardManager = GetComponent<BoardManager>();
         if (boardManager == null)
-            boardManager = Object.FindObjectOfType<BoardManager>();
+            boardManager = FindAnyObjectByType<BoardManager>();
 
         UpdateTurnUI();
     }

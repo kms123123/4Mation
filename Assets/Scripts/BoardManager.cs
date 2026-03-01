@@ -34,7 +34,7 @@ public class BoardManager : MonoBehaviour
     {
         gameManager = GetComponent<GameManager>();
         if (gameManager == null)
-            gameManager = Object.FindObjectOfType<GameManager>();
+            gameManager = FindAnyObjectByType<GameManager>();
 
         if (boardContainer == null)
         {
