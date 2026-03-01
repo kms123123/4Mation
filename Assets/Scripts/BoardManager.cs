@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// 씬에 배치된 7x7 보드의 각 셀 8방향 이웃 연결, 클릭 처리, 4목 판정.
 /// 보드는 씬에서 직접 디자인하고, boardContainer에 할당.
 /// </summary>
-public class BoardManager : MonoBehaviour
+public class BoardManager : SingletonBehaviour<BoardManager>
 {
     [Header("보드 설정")]
     [SerializeField] private int boardSize = 7;
@@ -19,7 +19,6 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private bool autoAssignRowCol = true;
 
     private GridCell[,] cells;
-    private GameManager gameManager;
 
     public int BoardSize => boardSize;
     public GridCell[,] Cells => cells;
@@ -31,12 +30,9 @@ public class BoardManager : MonoBehaviour
         return cells[row, col];
     }
 
-    private void Awake()
+    protected override void Awake()
     {
-        gameManager = GetComponent<GameManager>();
-        if (gameManager == null)
-            gameManager = FindAnyObjectByType<GameManager>();
-
+        base.Awake();
         if (boardContainer == null)
         {
             Debug.LogError("BoardManager: boardContainer를 할당해주세요. 씬에서 보드를 디자인한 뒤 부모를 드래그하세요.");
@@ -99,7 +95,7 @@ public class BoardManager : MonoBehaviour
 
     public void OnCellClicked(GridCell cell)
     {
-        gameManager?.OnCellClicked(cell);
+        GameManager.Instance?.OnCellClicked(cell);
     }
 
     /// <summary>

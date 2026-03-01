@@ -6,10 +6,9 @@ using System.Collections.Generic;
 /// 턴제 말 놓기 게임 로직.
 /// 두 플레이어가 번갈아가며 빈 칸에 말을 놓습니다.
 /// </summary>
-public class GameManager : MonoBehaviour
+public class GameManager : SingletonBehaviour<GameManager>
 {
     [Header("참조")]
-    [SerializeField] private BoardManager boardManager;
     [SerializeField] private Text turnText;
     [SerializeField] private Text statusText;
 
@@ -26,20 +25,16 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public IReadOnlyList<GridCell> WinningCells { get; private set; }
 
-    private void Awake()
+    protected override void Awake()
     {
-        if (boardManager == null)
-            boardManager = GetComponent<BoardManager>();
-        if (boardManager == null)
-            boardManager = FindAnyObjectByType<BoardManager>();
-
+        base.Awake();
         UpdateTurnUI();
     }
 
     public void OnCellClicked(GridCell cell)
     {
         if (gameOver) return;
-        if (boardManager == null) return;
+        if (BoardManager.Instance == null) return;
         if (cell == null) return;
 
         if (cell.HasPiece)
@@ -49,7 +44,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (!boardManager.IsValidPlacement(cell, isFirstTurn, lastPlacedCell, currentPlayer))
+        if (!BoardManager.Instance.IsValidPlacement(cell, isFirstTurn, lastPlacedCell, currentPlayer))
         {
             if (statusText != null)
                 statusText.text = "해당 위치에 놓을 수 없습니다.";
@@ -61,7 +56,7 @@ public class GameManager : MonoBehaviour
         isFirstTurn = false;
         pieceCount++;
 
-        var winningLine = boardManager.GetWinningLine(cell, currentPlayer);
+        var winningLine = BoardManager.Instance.GetWinningLine(cell, currentPlayer);
         if (winningLine != null)
         {
             gameOver = true;
@@ -111,13 +106,13 @@ public class GameManager : MonoBehaviour
         lastPlacedCell = null;
         pieceCount = 0;
 
-        if (boardManager != null && boardManager.Cells != null)
+        if (BoardManager.Instance != null && BoardManager.Instance.Cells != null)
         {
-            for (int r = 0; r < boardManager.BoardSize; r++)
+            for (int r = 0; r < BoardManager.Instance.BoardSize; r++)
             {
-                for (int c = 0; c < boardManager.BoardSize; c++)
+                for (int c = 0; c < BoardManager.Instance.BoardSize; c++)
                 {
-                    var cell = boardManager.Cells[r, c];
+                    var cell = BoardManager.Instance.Cells[r, c];
                     cell.SetHighlight(false);
                     cell.ClearPiece();
                 }
