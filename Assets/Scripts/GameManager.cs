@@ -1,17 +1,12 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
 
-/// <summary>
+/// <summary>   
 /// 턴제 말 놓기 게임 로직.
 /// 두 플레이어가 번갈아가며 빈 칸에 말을 놓습니다.
 /// </summary>
 public class GameManager : SingletonBehaviour<GameManager>
 {
-    [Header("참조")]
-    [SerializeField] private Text turnText;
-    [SerializeField] private Text statusText;
-
     private int currentPlayer = 1; // 1 또는 2
     private bool gameOver;
     private bool isFirstTurn = true;
@@ -28,7 +23,7 @@ public class GameManager : SingletonBehaviour<GameManager>
     protected override void Awake()
     {
         base.Awake();
-        UpdateTurnUI();
+        UIManager.Instance?.UpdateTurn(currentPlayer, pieceCount);
     }
 
     public void OnCellClicked(GridCell cell)
@@ -39,15 +34,13 @@ public class GameManager : SingletonBehaviour<GameManager>
 
         if (cell.HasPiece)
         {
-            if (statusText != null)
-                statusText.text = "이미 말이 있는 칸입니다.";
+            UIManager.Instance?.SetStatus("This cell already has a piece.");
             return;
         }
 
         if (!BoardManager.Instance.IsValidPlacement(cell, isFirstTurn, lastPlacedCell, currentPlayer))
         {
-            if (statusText != null)
-                statusText.text = "해당 위치에 놓을 수 없습니다.";
+            UIManager.Instance?.SetStatus("Invalid placement.");
             return;
         }
 
@@ -64,34 +57,21 @@ public class GameManager : SingletonBehaviour<GameManager>
             foreach (var c in winningLine)
                 c.SetHighlight(true);
 
-            if (statusText != null)
-                statusText.text = $"플레이어 {currentPlayer} 승리!";
-            if (turnText != null)
-                turnText.text = $"플레이어 {currentPlayer} 승리!";
+            UIManager.Instance?.ShowVictory(currentPlayer);
             return;
         }
 
         if (pieceCount >= PiecesPerPlayer * 2)
         {
             gameOver = true;
-            if (statusText != null)
-                statusText.text = "무승부!";
-            if (turnText != null)
-                turnText.text = "무승부!";
+            UIManager.Instance?.ShowDraw();
             return;
         }
 
-        if (statusText != null)
-            statusText.text = "";
+        UIManager.Instance?.ClearStatus();
 
         currentPlayer = currentPlayer == 1 ? 2 : 1;
-        UpdateTurnUI();
-    }
-
-    private void UpdateTurnUI()
-    {
-        if (turnText != null)
-            turnText.text = $"플레이어 {currentPlayer}의 턴 ({pieceCount}/48)";
+        UIManager.Instance?.UpdateTurn(currentPlayer, pieceCount);
     }
 
     /// <summary>
@@ -119,8 +99,6 @@ public class GameManager : SingletonBehaviour<GameManager>
             }
         }
 
-        UpdateTurnUI();
-        if (statusText != null)
-            statusText.text = "";
+        UIManager.Instance?.ResetForNewGame();
     }
 }
