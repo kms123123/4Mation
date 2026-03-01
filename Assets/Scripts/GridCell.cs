@@ -101,6 +101,18 @@ public class GridCell : MonoBehaviour
             pieceImage.gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// 4목 승리 시 해당 돌 표시 (하이라이트)
+    /// </summary>
+    public void SetHighlight(bool on)
+    {
+        if (pieceImage == null) return;
+        if (on && HasPiece)
+            pieceImage.color = new Color(1f, 0.84f, 0f, 1f); // 골드
+        else if (HasPiece)
+            pieceImage.color = CurrentPlayer == 1 ? Color.black : Color.white;
+    }
+
     private void OnClicked()
     {
         boardManager?.OnCellClicked(this);
