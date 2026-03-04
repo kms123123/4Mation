@@ -25,6 +25,8 @@ public class GridCell : MonoBehaviour
     [Header("UI")]
     [SerializeField] private Image backgroundImage;
     [SerializeField] private Image pieceImage;
+    [SerializeField] private Image canSelectImage;
+    [SerializeField] private Image putImage;
 
     public bool HasPiece => CurrentPlayer != 0;
 
@@ -90,8 +92,10 @@ public class GridCell : MonoBehaviour
         if (pieceImage != null)
         {
             pieceImage.gameObject.SetActive(true);
-            pieceImage.color = player == 1 ? Color.black : Color.white;
+            pieceImage.color = player == 1 ? Color.aquamarine : Color.violetRed;
         }
+
+
     }
 
     public void ClearPiece()

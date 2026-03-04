@@ -4,10 +4,44 @@ using UnityEditor;
 
 /// <summary>
 /// 씬에서 7x7 보드 UI를 에디터에서 생성하는 도구.
-/// 메뉴: Board Game > Create 7x7 Board in Scene
+/// GridCell 프리팹을 7x7로 배치.
 /// </summary>
 public static class BoardSetupEditor
 {
+    private const string GridCellPrefabPath = "Assets/Prefabs/GridCell.prefab";
+
+    private static GameObject GetOrCreateGridCellPrefab()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GridCellPrefabPath);
+        if (prefab != null) return prefab;
+
+        var cell = CreateCellObject(0, 0);
+        if (!AssetDatabase.IsValidFolder("Assets/Prefabs"))
+            AssetDatabase.CreateFolder("Assets", "Prefabs");
+        prefab = PrefabUtility.SaveAsPrefabAsset(cell, GridCellPrefabPath);
+        Object.DestroyImmediate(cell);
+        return prefab;
+    }
+
+    [MenuItem("Board Game/Create GridCell Prefab")]
+    public static void CreateGridCellPrefab()
+    {
+        var existing = AssetDatabase.LoadAssetAtPath<GameObject>(GridCellPrefabPath);
+        if (existing != null)
+        {
+            Debug.Log($"GridCell 프리팹이 이미 존재합니다: {GridCellPrefabPath}");
+            Selection.activeObject = existing;
+            return;
+        }
+        if (!AssetDatabase.IsValidFolder("Assets/Prefabs"))
+            AssetDatabase.CreateFolder("Assets", "Prefabs");
+        var cell = CreateCellObject(0, 0);
+        var prefab = PrefabUtility.SaveAsPrefabAsset(cell, GridCellPrefabPath);
+        Object.DestroyImmediate(cell);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"GridCell 프리팹 생성됨: {GridCellPrefabPath}");
+        Selection.activeObject = prefab;
+    }
     private static System.Type GetBoardResolutionAdapterType()
     {
         foreach (var asm in System.AppDomain.CurrentDomain.GetAssemblies())
@@ -99,13 +133,18 @@ public static class BoardSetupEditor
 
         AddOrGetResolutionAdapter(boardObj, rect, gridLayout);
 
-        for (int r = 0; r < 7; r++)
+        var cellPrefab = GetOrCreateGridCellPrefab();
+        if (cellPrefab == null)
         {
-            for (int c = 0; c < 7; c++)
-            {
-                var cellObj = CreateCell(r, c);
-                cellObj.transform.SetParent(boardObj.transform, false);
-            }
+            Debug.LogError("GridCell 프리팹을 찾을 수 없습니다. Board Game > Create GridCell Prefab을 먼저 실행하세요.");
+            return;
+        }
+
+        for (int i = 0; i < 49; i++)
+        {
+            var cellObj = (GameObject)PrefabUtility.InstantiatePrefab(cellPrefab);
+            cellObj.transform.SetParent(boardObj.transform, false);
+            cellObj.name = $"Cell_{i / 7}_{i % 7}";
         }
 
         var gameObj = new GameObject("BoardGame");
@@ -121,9 +160,9 @@ public static class BoardSetupEditor
         Undo.RegisterCreatedObjectUndo(gameObj, "Create Board");
     }
 
-    private static GameObject CreateCell(int row, int col)
+    private static GameObject CreateCellObject(int row, int col)
     {
-        var obj = new GameObject($"Cell_{row}_{col}");
+        var obj = new GameObject("GridCell");
         obj.AddComponent<RectTransform>();
 
         var bg = obj.AddComponent<Image>();
