@@ -140,6 +140,25 @@ public class BoardManager : SingletonBehaviour<BoardManager>
     }
 
     /// <summary>
+    /// 현재 턴에 놓을 수 있는 셀 리스트 반환
+    /// </summary>
+    public List<GridCell> GetValidPlacementCells(bool isFirstTurn, GridCell lastPlacedCell, int currentPlayer)
+    {
+        var result = new List<GridCell>();
+        for (int r = 0; r < boardSize; r++)
+        {
+            for (int c = 0; c < boardSize; c++)
+            {
+                var cell = cells[r, c];
+                if (cell.HasPiece) continue;
+                if (IsValidPlacement(cell, isFirstTurn, lastPlacedCell, currentPlayer))
+                    result.Add(cell);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
     /// 4목을 이룬 모든 그리드 셀 리스트 반환. 없으면 null.
     /// 가로, 세로, 대각선(\) , 대각선(/) 4방향 검사.
     /// </summary>

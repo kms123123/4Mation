@@ -52,6 +52,10 @@ public class GridCell : MonoBehaviour
 
         if (pieceImage != null)
             pieceImage.gameObject.SetActive(false);
+        if (putImage != null)
+            putImage.gameObject.SetActive(false);
+        if (canSelectImage != null)
+            canSelectImage.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -103,6 +107,26 @@ public class GridCell : MonoBehaviour
         CurrentPlayer = 0;
         if (pieceImage != null)
             pieceImage.gameObject.SetActive(false);
+        if (putImage != null)
+            putImage.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 마지막에 놓은 위치 표시 (putImage)
+    /// </summary>
+    public void SetPutIndicator(bool on)
+    {
+        if (putImage != null)
+            putImage.gameObject.SetActive(on);
+    }
+
+    /// <summary>
+    /// 놓을 수 있는 셀 표시 (canSelectImage)
+    /// </summary>
+    public void SetCanSelect(bool on)
+    {
+        if (canSelectImage != null)
+            canSelectImage.gameObject.SetActive(on);
     }
 
     /// <summary>

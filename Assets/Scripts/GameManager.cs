@@ -16,6 +16,17 @@ public class GameManager : SingletonBehaviour<GameManager>
     private const int PiecesPerPlayer = 24;
 
     /// <summary>
+    /// 턴 히스토리 (스택). 한 턴 무르기용.
+    /// </summary>
+    private Stack<PlacementRecord> placementHistory = new Stack<PlacementRecord>();
+
+    private struct PlacementRecord
+    {
+        public int Player;
+        public GridCell Cell;
+    }
+
+    /// <summary>
     /// 4목을 이룬 모든 그리드 셀 리스트. 승리 시에만 채워짐.
     /// </summary>
     public IReadOnlyList<GridCell> WinningCells { get; private set; }
@@ -24,6 +35,11 @@ public class GameManager : SingletonBehaviour<GameManager>
     {
         base.Awake();
         UIManager.Instance?.UpdateTurn(currentPlayer, pieceCount);
+    }
+
+    private void Start()
+    {
+        UpdateSelectableCells();
     }
 
     public void OnCellClicked(GridCell cell)
@@ -49,6 +65,11 @@ public class GameManager : SingletonBehaviour<GameManager>
         isFirstTurn = false;
         pieceCount++;
 
+        var previousTop = placementHistory.Count > 0 ? placementHistory.Peek().Cell : null;
+        placementHistory.Push(new PlacementRecord { Player = currentPlayer, Cell = cell });
+        if (previousTop != null) previousTop.SetPutIndicator(false);
+        cell.SetPutIndicator(true);
+
         var winningLine = BoardManager.Instance.GetWinningLine(cell, currentPlayer);
         if (winningLine != null)
         {
@@ -58,6 +79,7 @@ public class GameManager : SingletonBehaviour<GameManager>
                 c.SetHighlight(true);
 
             UIManager.Instance?.ShowVictory(currentPlayer);
+            UpdateSelectableCells();
             return;
         }
 
@@ -65,6 +87,7 @@ public class GameManager : SingletonBehaviour<GameManager>
         {
             gameOver = true;
             UIManager.Instance?.ShowDraw();
+            UpdateSelectableCells();
             return;
         }
 
@@ -72,6 +95,29 @@ public class GameManager : SingletonBehaviour<GameManager>
 
         currentPlayer = currentPlayer == 1 ? 2 : 1;
         UIManager.Instance?.UpdateTurn(currentPlayer, pieceCount);
+        UpdateSelectableCells();
+    }
+
+    /// <summary>
+    /// 놓을 수 있는 셀에만 canSelectImage 활성화
+    /// </summary>
+    private void UpdateSelectableCells()
+    {
+        if (BoardManager.Instance == null || BoardManager.Instance.Cells == null) return;
+
+        var validList = gameOver
+            ? new List<GridCell>()
+            : BoardManager.Instance.GetValidPlacementCells(isFirstTurn, lastPlacedCell, currentPlayer);
+        var validSet = new HashSet<GridCell>(validList);
+
+        for (int r = 0; r < BoardManager.Instance.BoardSize; r++)
+        {
+            for (int c = 0; c < BoardManager.Instance.BoardSize; c++)
+            {
+                var cell = BoardManager.Instance.Cells[r, c];
+                cell.SetCanSelect(validSet.Contains(cell));
+            }
+        }
     }
 
     /// <summary>
@@ -86,6 +132,8 @@ public class GameManager : SingletonBehaviour<GameManager>
         lastPlacedCell = null;
         pieceCount = 0;
 
+        placementHistory.Clear();
+
         if (BoardManager.Instance != null && BoardManager.Instance.Cells != null)
         {
             for (int r = 0; r < BoardManager.Instance.BoardSize; r++)
@@ -94,11 +142,14 @@ public class GameManager : SingletonBehaviour<GameManager>
                 {
                     var cell = BoardManager.Instance.Cells[r, c];
                     cell.SetHighlight(false);
+                    cell.SetPutIndicator(false);
+                    cell.SetCanSelect(false);
                     cell.ClearPiece();
                 }
             }
         }
 
         UIManager.Instance?.ResetForNewGame();
+        UpdateSelectableCells();
     }
 }
