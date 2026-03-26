@@ -160,6 +160,80 @@ public static class BoardSetupEditor
         Undo.RegisterCreatedObjectUndo(gameObj, "Create Board");
     }
 
+    [MenuItem("Board Game/Create 4x4 Rotating Board in Scene")]
+    public static void CreateRotatingBoardInScene()
+    {
+        var canvas = Object.FindAnyObjectByType<Canvas>();
+        if (canvas == null)
+        {
+            var canvasObj = new GameObject("Canvas");
+            canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<GraphicRaycaster>();
+
+            if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            {
+                var esObj = new GameObject("EventSystem");
+                esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            }
+        }
+
+        var scaler = canvas.GetComponent<CanvasScaler>();
+        if (scaler == null) scaler = canvas.gameObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
+        scaler.referencePixelsPerUnit = 100;
+
+        var boardObj = new GameObject("RotatingBoard");
+        boardObj.transform.SetParent(canvas.transform, false);
+
+        var rect = boardObj.AddComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(400, 400);
+
+        var gridLayout = boardObj.AddComponent<GridLayoutGroup>();
+        gridLayout.cellSize = new Vector2(90, 90);
+        gridLayout.spacing = new Vector2(6, 6);
+        gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        gridLayout.constraintCount = 4;
+        gridLayout.childAlignment = TextAnchor.MiddleCenter;
+
+        AddOrGetResolutionAdapter(boardObj, rect, gridLayout);
+
+        var cellPrefab = GetOrCreateGridCellPrefab();
+        if (cellPrefab == null)
+        {
+            Debug.LogError("GridCell 프리팹을 찾을 수 없습니다. Board Game > Create GridCell Prefab을 먼저 실행하세요.");
+            return;
+        }
+
+        for (int i = 0; i < 16; i++)
+        {
+            var cellObj = (GameObject)PrefabUtility.InstantiatePrefab(cellPrefab);
+            cellObj.transform.SetParent(boardObj.transform, false);
+            cellObj.name = $"Cell_{i / 4}_{i % 4}";
+        }
+
+        var gameObj = new GameObject("RotatingBoardGame");
+        var rotatingBoardManager = gameObj.AddComponent<RotatingBoardManager>();
+        gameObj.AddComponent<RotatingGameManager>();
+
+        var so = new SerializedObject(rotatingBoardManager);
+        so.FindProperty("boardContainer").objectReferenceValue = rect;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        Selection.activeGameObject = boardObj;
+        Undo.RegisterCreatedObjectUndo(boardObj, "Create Rotating Board");
+        Undo.RegisterCreatedObjectUndo(gameObj, "Create Rotating Board");
+
+        Debug.Log("4x4 회전 보드 생성 완료. RotatingBoardGame 오브젝트에 UIManager도 연결하세요.");
+    }
+
     private static GameObject CreateCellObject(int row, int col)
     {
         var obj = new GameObject("GridCell");

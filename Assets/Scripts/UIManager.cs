@@ -118,6 +118,7 @@ public class UIManager : SingletonBehaviour<UIManager>
     {
         HideGameOverOverlay();
         GameManager.Instance?.RestartGame();
+        RotatingGameManager.Instance?.RestartGame();
     }
 
     /// <summary>
