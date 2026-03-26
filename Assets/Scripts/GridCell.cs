@@ -37,9 +37,9 @@ public class GridCell : MonoBehaviour
     }
     public int CurrentPlayer { get; private set; }
 
-    private BoardManager boardManager;
+    private IGridCellOwner boardManager;
 
-    public void Initialize(int row, int col, BoardManager manager)
+    public void Initialize(int row, int col, IGridCellOwner manager)
     {
         Row = row;
         Col = col;
@@ -109,6 +109,26 @@ public class GridCell : MonoBehaviour
             pieceImage.gameObject.SetActive(false);
         if (putImage != null)
             putImage.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 보드 회전 시 플레이어 값과 비주얼만 갱신 (putIndicator 초기화 포함)
+    /// </summary>
+    public void SetPlayerValue(int player)
+    {
+        CurrentPlayer = player;
+        if (putImage != null) putImage.gameObject.SetActive(false);
+        if (pieceImage == null) return;
+
+        if (player == 0)
+        {
+            pieceImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            pieceImage.gameObject.SetActive(true);
+            pieceImage.color = player == 1 ? Color.aquamarine : Color.violetRed;
+        }
     }
 
     /// <summary>

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// 씬에 배치된 7x7 보드의 각 셀 8방향 이웃 연결, 클릭 처리, 4목 판정.
 /// 보드는 씬에서 직접 디자인하고, boardContainer에 할당.
 /// </summary>
-public class BoardManager : SingletonBehaviour<BoardManager>
+public class BoardManager : SingletonBehaviour<BoardManager>, IGridCellOwner
 {
     [Header("보드 설정")]
     [SerializeField] private int boardSize = 7;
