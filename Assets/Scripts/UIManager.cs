@@ -17,6 +17,12 @@ public class UIManager : SingletonBehaviour<UIManager>
     [SerializeField] private TextMeshProUGUI gameOverText;
     [SerializeField] private Button restartButton;
 
+    [Header("한수 무르기")]
+    [SerializeField] private Button undoButton;
+
+    [Header("게임 매니저")]
+    [SerializeField] private BaseGameManager activeGameManager;
+
     [Header("게임 오버 애니메이션")]
     [SerializeField] private float delayBeforeFade = 1f;
     [SerializeField] private float fadeInDuration = 1f;
@@ -28,15 +34,20 @@ public class UIManager : SingletonBehaviour<UIManager>
         base.Awake();
         if (restartButton != null)
             restartButton.onClick.AddListener(OnRestartClicked);
+        if (undoButton != null)
+        {
+            undoButton.onClick.AddListener(OnUndoClicked);
+            undoButton.interactable = false;
+        }
     }
 
     /// <summary>
-    /// 턴 표시 업데이트 (플레이어 N의 턴, 말 개수)
+    /// 턴 표시 업데이트 (플레이어 N의 턴, 말 개수/최대)
     /// </summary>
-    public void UpdateTurn(int currentPlayer, int pieceCount)
+    public void UpdateTurn(int currentPlayer, int pieceCount, int maxPieces)
     {
         if (turnText != null)
-            turnText.text = $"Player {currentPlayer}'s Turn ({pieceCount}/48)";
+            turnText.text = $"Player {currentPlayer}'s Turn ({pieceCount}/{maxPieces})";
     }
 
     /// <summary>
@@ -114,17 +125,30 @@ public class UIManager : SingletonBehaviour<UIManager>
         gameOverCoroutine = null;
     }
 
+    private void OnUndoClicked()
+    {
+        activeGameManager?.UndoLastMove();
+    }
+
     private void OnRestartClicked()
     {
         HideGameOverOverlay();
-        GameManager.Instance?.RestartGame();
-        RotatingGameManager.Instance?.RestartGame();
+        activeGameManager?.RestartGame();
+    }
+
+    /// <summary>
+    /// 무르기 버튼 활성/비활성
+    /// </summary>
+    public void SetUndoButtonInteractable(bool interactable)
+    {
+        if (undoButton != null)
+            undoButton.interactable = interactable;
     }
 
     /// <summary>
     /// 게임 오버 오버레이 숨김
     /// </summary>
-    private void HideGameOverOverlay()
+    public void HideGameOverOverlay()
     {
         if (gameOverCoroutine != null)
         {
@@ -136,12 +160,12 @@ public class UIManager : SingletonBehaviour<UIManager>
     }
 
     /// <summary>
-    /// 게임 재시작 시 UI 초기화
+    /// 게임 재시작 시 UI 초기화 (UpdateTurn은 BaseGameManager.RestartGame이 처리)
     /// </summary>
     public void ResetForNewGame()
     {
         HideGameOverOverlay();
-        UpdateTurn(1, 0);
         ClearStatus();
+        SetUndoButtonInteractable(false);
     }
 }
