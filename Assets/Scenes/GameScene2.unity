@@ -3740,6 +3740,7 @@ MonoBehaviour:
   gameOverText: {fileID: 1814018425}
   restartButton: {fileID: 1814018424}
   undoButton: {fileID: 1863587411}
+  activeGameManager: {fileID: 432722950}
   delayBeforeFade: 1
   fadeInDuration: 1
 --- !u!1 &1403617415
